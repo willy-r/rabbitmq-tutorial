@@ -3,22 +3,23 @@ import sys
 import pika
 from loguru import logger
 
-import config
+from ..config import BROKER_HOST
 
 
 connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host=config.BROKER_HOST))
+    pika.ConnectionParameters(host=BROKER_HOST)
+)
 channel = connection.channel()
+exchange_name = 'task_exchange'
+routing_key = 'task_queue'
 
-channel.queue_declare(queue='task_queue', durable=True)
+channel.exchange_declare(exchange=exchange_name, exchange_type='direct')
 
 message = ' '.join(sys.argv[1:]) or 'Hello, World!'
 channel.basic_publish(
-    exchange='',
-    routing_key='task_queue',
+    exchange=exchange_name,
+    routing_key=routing_key,
     body=message,
-    properties=pika.BasicProperties(
-        delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE)
 )
 
 logger.info(f" [x] Sent '{message}'")
